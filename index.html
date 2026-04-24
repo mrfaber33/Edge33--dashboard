@@ -740,7 +740,24 @@ if(trade.resultadoManual){
     result: pnl > 0 ? "WIN" : pnl < 0 ? "LOSS" : "BE"
   };
 }
+function actualizarDuracion(){
+  const inicio = $("horaApertura").value;
+  const fin = $("horaCierre").value;
 
+  if(!inicio || !fin) return;
+
+  const [h1, m1] = inicio.split(":").map(Number);
+  const [h2, m2] = fin.split(":").map(Number);
+
+  let minutos = (h2 * 60 + m2) - (h1 * 60 + m1);
+
+  if(minutos < 0) minutos += 1440;
+
+  const horas = Math.floor(minutos / 60);
+  const mins = minutos % 60;
+
+  $("duracion").value = `${horas}h ${mins}m`;
+}
 function getComputedTrades(){
   return trades.map(calcTrade);
 }
@@ -1040,27 +1057,23 @@ resultadoManual: num($("resultadoR").value),
     alert("Pon entrada y salida.");
     return;
   }
-
   trades.push(trade);
   save();
   refreshAll();
   resetForm();
 });
-
 window.removeTrade = function(index){
   if(!confirm("¿Eliminar esta operación?")) return;
   trades.splice(index,1);
   save();
   refreshAll();
 }
-
 $("clearBtn").addEventListener("click", ()=>{
   if(!confirm("¿Seguro que quieres borrar toda la bitácora?")) return;
   trades = [];
   save();
   refreshAll();
 });
-
 $("exportBtn").addEventListener("click", ()=>{
   const blob = new Blob([JSON.stringify(trades, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
@@ -1068,7 +1081,8 @@ $("exportBtn").addEventListener("click", ()=>{
   a.download = "edge33-trades.json";
   a.click();
 });
-
+  $("horaApertura").addEventListener("input", actualizarDuracion);
+$("horaCierre").addEventListener("input", actualizarDuracion);
 $("csvBtn").addEventListener("click", ()=>{
   const rows = getComputedTrades();
   const headers = ["date","asset","direction","entry","exit","stop","target","size","commission","strategy","notes","pnl","pnlPct","r","result"];
